@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/token"
 	"go/types"
 	"log"
@@ -75,7 +76,8 @@ func main() {
 	g.Printf("\n")
 
 	g.generate(pkg)
-	os.Stdout.Write(g.buf.Bytes())
+	
+	os.Stdout.Write(g.format())
 }
 
 // parsePackage analyzes the single package constructed from the patterns and tags.
@@ -163,6 +165,19 @@ func (file File) genDecl(node ast.Node) bool {
 		return false
 	}
 	return true
+}
+
+// format returns the gofmt-ed contents of the Generator's buffer.
+func (g *Generator) format() []byte {
+	src, err := format.Source(g.buf.Bytes())
+	if err != nil {
+		// Should never happen, but can arise when developing this code.
+		// The user can compile the output to see the error.
+		fmt.Fprintf(os.Stderr, "warning: internal error: invalid Go generated: %s", err)
+		fmt.Fprintf(os.Stderr, "warning: compile the package to analyze the error")
+		return g.buf.Bytes()
+	}
+	return src
 }
 
 // func (g *Generator) generate(defs map[*ast.Ident]types.Object, outTypes []string, prefix string) {
