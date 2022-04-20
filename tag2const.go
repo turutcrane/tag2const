@@ -16,9 +16,6 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// Generator holds the state of the analysis. Primarily used to buffer
-// the output for format.Source.
-
 type Generator struct {
 	buf    bytes.Buffer `db:"xxxx,abc" xx:"yyy"`
 	prefix string
@@ -85,8 +82,6 @@ func main() {
 func parsePackage(patterns []string, buildTags []string) *packages.Package {
 	cfg := &packages.Config{
 		Mode: packages.LoadSyntax,
-		// TODO: Need to think about constants in test files. Maybe write type_string_test.go
-		// in a separate pass? For later.
 		Tests:      false,
 		BuildFlags: []string{fmt.Sprintf("-tags=%s", strings.Join(buildTags, " "))},
 	}
@@ -137,7 +132,6 @@ func (file File) genDecl(node ast.Node) bool {
 			def := file.Defs[d.Name]
 			t := def.Type().Underlying()
 			if s, ok := t.(*types.Struct); ok {
-				// log.Println("T121:", d.Name.Name)
 				n := s.NumFields()
 				for i := 0; i < n; i++ {
 					field := s.Field(i)
