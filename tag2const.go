@@ -19,10 +19,10 @@ import (
 // the output for format.Source.
 
 type Generator struct {
-	buf    bytes.Buffer `db:"xxxx", xx:"yyy"`
+	buf    bytes.Buffer `db:"xxxx,abc" xx:"yyy"`
 	prefix string
 	tag    string
-	types  []string
+	types  []string `db:"-"`
 	c      map[string]string
 }
 
@@ -143,13 +143,16 @@ func (file File) genDecl(node ast.Node) bool {
 					name := file.g.prefix + field.Name()
 					val := field.Name()
 					if tag != "" {
-						val = tag
+						val = strings.Split(tag, ",")[0]
 					}
-					if v, ok := file.g.c[name]; !ok {
-						file.g.Printf("\t%s = \"%s\"\n", name, val)
-					} else {
-						if v != val {
-							log.Panic("T152:", name, v, val)
+					if val != "-" {
+						if v, ok := file.g.c[name]; !ok {
+							file.g.Printf("\t%s = \"%s\"\n", name, val)
+							file.g.c[name] = val
+						} else {
+							if v != val {
+								log.Panic("T152:", name, v, val)
+							}
 						}
 					}
 				}
